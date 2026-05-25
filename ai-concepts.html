@@ -2089,29 +2089,18 @@
       : '';
     card.innerHTML = `<div class="tc-title">${def.title}</div>${def.body}${exHtml}`;
     card.classList.add('visible');
-    positionCard(el);
+    positionCard();
   }
 
   function hideCard() {
     hideTimer = setTimeout(() => card.classList.remove('visible'), 120);
   }
 
-  function positionCard(el) {
-    const rect = el.getBoundingClientRect();
-    const gap = 10;
-    const cw = card.offsetWidth  || 340;
-    const ch = card.offsetHeight || 160;
-    const vw = window.innerWidth;
-
-    let top = rect.top - ch - gap;
-    if (top < 8) top = rect.bottom + gap;
-
-    let left = rect.left;
-    if (left + cw > vw - 8) left = vw - cw - 8;
-    if (left < 8) left = 8;
-
-    card.style.top  = top  + window.scrollY + 'px';
-    card.style.left = left + window.scrollX + 'px';
+  function positionCard() {
+    // Always centred in the viewport — no measurement needed.
+    card.style.top       = '50%';
+    card.style.left      = '50%';
+    card.style.transform = 'translate(-50%, -50%)';
   }
 
   document.querySelectorAll('.term').forEach(el => {
