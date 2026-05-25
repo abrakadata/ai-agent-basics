@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Systems Guide — Agents, Harnesses & Swarms</title>
+  <style>
+    /* ── Variables ─────────────────────────────────────────────── */
+    :root {
+      --bg:          #0d0f18;
+      --bg2:         #131623;
+      --bg3:         #1a1d2e;
+      --border:      #252840;
+      --accent:      #6366f1;
+      --accent2:     #818cf8;
+      --green:       #10b981;
+      --amber:       #f59e0b;
+      --rose:        #f43f5e;
+      --cyan:        #06b6d4;
+      --violet:      #a78bfa;
+      --text:        #e2e8f0;
+      --muted:       #94a3b8;
+      --dim:         #4b5568;
+      --nav-w:       290px;
+      --radius:      10px;
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+      background: var(--bg);
+      color: #ffffff;
+      display: flex;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ═══════════════════════════════════════════════════════════ */
+    /*  LEFT NAV                                                   */
+    /* ═══════════════════════════════════════════════════════════ */
+    #nav {
+      width: var(--nav-w);
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0; left: 0;
+      overflow-y: auto;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-logo {
+      padding: 1.25rem 1.1rem 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.35rem;
+    }
+    .nav-logo h1 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent2);
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .nav-logo p { font-size: 0.78rem; color: var(--dim); }
+
+    /* nav groups */
+    .nav-group { margin-bottom: 0; }
+
+    /* level 0 — top-level section header */
+    .nav-l0 {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.38rem 1.1rem;
+      cursor: pointer;
+      font-size: 0.91rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      border-left: 2.5px solid transparent;
+      user-select: none;
+      transition: background 0.12s, color 0.12s;
+    }
+    .nav-l0:hover { background: rgba(99,102,241,0.07); }
+    .nav-l0.active {
+      color: var(--accent2);
+      border-left-color: var(--accent);
+      background: rgba(99,102,241,0.11);
+    }
+
+    /* level 1 */
+    .nav-l1 {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 1.1rem 0.3rem 2rem;
+      cursor: pointer;
+      font-size: 0.87rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      border-left: 2.5px solid transparent;
+      user-select: none;
+      transition: background 0.12s, color 0.12s;
+    }
+    .nav-l1:hover { background: rgba(99,102,241,0.05); color: var(--text); }
+    .nav-l1.active {
+      color: var(--accent2);
+      border-left-color: var(--accent);
+      background: rgba(99,102,241,0.09);
+    }
+    .nav-l1.sub-header {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    /* level 2 */
+    .nav-l2 {
+      display: flex;
+      align-items: center;
+      padding: 0.25rem 1.1rem 0.25rem 3.1rem;
+      cursor: pointer;
+      font-size: 0.83rem;
+      color: var(--muted);
+      text-decoration: none;
+      border-left: 2.5px solid transparent;
+      user-select: none;
+      transition: background 0.12s, color 0.12s;
+    }
+    .nav-l2:hover { background: rgba(99,102,241,0.04); color: var(--text); }
+    .nav-l2.active {
+      color: var(--accent2);
+      border-left-color: var(--accent);
+      background: rgba(99,102,241,0.07);
+    }
+
+    /* caret */
+    .caret {
+      margin-left: auto;
+      font-size: 0.63rem;
+      color: var(--text);
+      transition: transform 0.18s;
+      flex-shrink: 0;
+    }
+    .caret.open { transform: rotate(90deg); }
+
+    /* collapsible children */
+    .nav-children { display: none; }
+    .nav-children.open { display: block; }
+
+    /* badge */
+    .nbadge {
+      font-size: 0.65rem;
+      padding: 0.1rem 0.48rem;
+      border-radius: 99px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      flex-shrink: 0;
+    }
+    .nb-blue   { background: rgba(99,102,241,.18); color: var(--accent2); }
+    .nb-green  { background: rgba(16,185,129,.18); color: var(--green);   }
+    .nb-amber  { background: rgba(245,158,11,.18); color: var(--amber);   }
+    .nb-cyan   { background: rgba(6,182,212,.18);  color: var(--cyan);    }
+
+    /* ═══════════════════════════════════════════════════════════ */
+    /*  MAIN CONTENT                                               */
+    /* ═══════════════════════════════════════════════════════════ */
+    #main {
+      margin-left: var(--nav-w);
+      flex: 1;
+      padding: 2.5rem 3rem 5rem;
+      max-width: calc(var(--nav-w) + 860px);
+    }
+
+    /* section spacing */
+    .section { margin-bottom: 5rem; }
+    .subsection { margin-bottom: 2.5rem; }
+
+    /* anchors for scroll offset */
+    .anchor {
+      display: block;
+      position: relative;
+      top: -5rem;
+      visibility: hidden;
+    }
+
+    /* ── Typography ──────────────────────────────────────────── */
+    h2 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 0.45rem;
+    }
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      color: var(--text);
+    }
+    h4 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .lead {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-bottom: 1.5rem;
+      max-width: 100%;
+    }
+    p { color: var(--muted); line-height: 1.78; margin-bottom: 0.9rem; font-size: 0.91rem; }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── Section number ──────────────────────────────────────── */
+    .sec-num {
+      display: inline-block;
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-right: 0.45rem;
+      letter-spacing: -0.025em;
+      vertical-align: baseline;
+      line-height: 1.15;
+    }
+
+    /* ── Section tag ──────────────────────────────────────────── */
+    .stag {
+      display: inline-block;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      padding: 0.18rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 0.7rem;
+    }
+    .stag-blue   { background: rgba(99,102,241,.13); color: var(--accent2); }
+    .stag-green  { background: rgba(16,185,129,.13); color: var(--green);   }
+    .stag-amber  { background: rgba(245,158,11,.13); color: var(--amber);   }
+    .stag-cyan   { background: rgba(6,182,212,.13);  color: var(--cyan);    }
+    .stag-violet { background: rgba(167,139,250,.13);color: var(--violet);  }
+    .stag-rose   { background: rgba(244,63,94,.13);  color: var(--rose);    }
+
+    /* ── Divider ─────────────────────────────────────────────── */
+    .divider { height: 1px; background: var(--border); margin: 3.5rem 0; }
+
+    /* ── Hero ────────────────────────────────────────────────── */
+    .hero {
+      padding: 0.5rem 0 3rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3.5rem;
+    }
+    .hero-title {
+      font-size: 2.6rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      background: linear-gradient(120deg, #e2e8f0 10%, #818cf8 55%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Pills ───────────────────────────────────────────────── */
+    .pills { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 1.25rem; }
+    .pill {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 99px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .pill-blue   { background: rgba(99,102,241,.12); color: var(--accent2); border: 1px solid rgba(99,102,241,.25); }
+    .pill-green  { background: rgba(16,185,129,.12); color: var(--green);   border: 1px solid rgba(16,185,129,.25); }
+    .pill-amber  { background: rgba(245,158,11,.12); color: var(--amber);   border: 1px solid rgba(245,158,11,.25); }
+    .pill-cyan   { background: rgba(6,182,212,.12);  color: var(--cyan);    border: 1px solid rgba(6,182,212,.25);  }
+    .pill-rose   { background: rgba(244,63,94,.12);  color: var(--rose);    border: 1px solid rgba(244,63,94,.25);  }
+    .pill-violet { background: rgba(167,139,250,.12);color: var(--violet);  border: 1px solid rgba(167,139,250,.25);}
+
+    /* ── Cards ───────────────────────────────────────────────── */
+    .card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.3rem;
+    }
+    .card + .card { margin-top: 0.75rem; }
+
+    .card.bl-accent { border-left: 3px solid var(--accent); }
+    .card.bl-green  { border-left: 3px solid var(--green);  }
+    .card.bl-amber  { border-left: 3px solid var(--amber);  }
+    .card.bl-cyan   { border-left: 3px solid var(--cyan);   }
+    .card.bl-rose   { border-left: 3px solid var(--rose);   }
+    .card.bl-violet { border-left: 3px solid var(--violet); }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; align-items: stretch; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; align-items: stretch; }
+    .grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; align-items: stretch; }
+    .grid2 > .card, .grid3 > .card, .grid4 > .card { height: 100%; box-sizing: border-box; }
+    .grid2 > .card + .card, .grid3 > .card + .card, .grid4 > .card + .card { margin-top: 0; }
+
+    /* ── Callout ─────────────────────────────────────────────── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      gap: 0.7rem;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+    .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .callout p { margin: 0; font-size: 0.86rem; }
+    .callout-blue   { background: rgba(99,102,241,.07);  border: 1px solid rgba(99,102,241,.2);  }
+    .callout-green  { background: rgba(16,185,129,.07);  border: 1px solid rgba(16,185,129,.2);  }
+    .callout-amber  { background: rgba(245,158,11,.07);  border: 1px solid rgba(245,158,11,.2);  }
+    .callout-cyan   { background: rgba(6,182,212,.07);   border: 1px solid rgba(6,182,212,.2);   }
+    .callout-rose   { background: rgba(244,63,94,.07);   border: 1px solid rgba(244,63,94,.2);   }
+
+    /* ── Highlight box ───────────────────────────────────────── */
+    .hbox {
+      background: linear-gradient(135deg, rgba(99,102,241,.07), rgba(6,182,212,.04));
+      border: 1px solid rgba(99,102,241,.2);
+      border-radius: var(--radius);
+      padding: 1.3rem 1.4rem;
+      margin: 1.25rem 0;
+    }
+    .hbox h4 { margin-bottom: 0.5rem; }
+    .hbox p { font-size: 0.88rem; margin: 0; }
+
+    /* ── Formula box ─────────────────────────────────────────── */
+    .formula {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+      text-align: center;
+      margin: 1.5rem 0;
+      font-size: 1.25rem;
+      letter-spacing: 0.04em;
+    }
+    .fterm {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .ft-blue   { background: rgba(99,102,241,.15); color: var(--accent2); }
+    .ft-green  { background: rgba(16,185,129,.15); color: var(--green);   }
+    .ft-amber  { background: rgba(245,158,11,.15); color: var(--amber);   }
+    .fplus { color: #ffffff; margin: 0 0.6rem; font-weight: 300; }
+
+    /* ── Feature list ────────────────────────────────────────── */
+    .flist { list-style: none; }
+    .flist li {
+      display: flex;
+      gap: 0.7rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid rgba(37,40,64,.6);
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+    .flist li:last-child { border-bottom: none; }
+    .flist .ico { flex-shrink: 0; width: 1.2em; text-align: center; }
+
+    /* ── Tables ──────────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    thead tr { background: rgba(99,102,241,.07); }
+    th {
+      padding: 0.7rem 1rem;
+      text-align: left;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--accent2);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 0.7rem 1rem;
+      color: var(--muted);
+      border-bottom: 1px solid rgba(37,40,64,.5);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(99,102,241,.03); }
+
+    /* ── Diagram ─────────────────────────────────────────────── */
+    .diag {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      margin: 1.25rem 0;
+    }
+    .flow-arrow { text-align: center; color: #ffffff; font-size: 1.4rem; margin: 0.1rem 0; }
+    .dbox {
+      border-radius: 8px;
+      padding: 0.65rem 1.1rem;
+      text-align: center;
+    }
+
+    /* comparison cols */
+    .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin: 1.25rem 0; align-items: stretch; }
+    .cmp > .cmp-col { height: 100%; box-sizing: border-box; }
+    .cmp-col {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .cmp-hdr {
+      padding: 0.6rem 1rem;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .cmp-body { padding: 0.85rem 1rem; }
+    .cmp-item {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .cmp-item:last-child { margin-bottom: 0; }
+
+    /* ── Arch layers ─────────────────────────────────────────── */
+    .layer {
+      border-radius: 8px;
+      padding: 0.65rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .layer-lbl { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; opacity: 0.85; min-width: 68px; color: var(--text); }
+    .layer-name { font-size: 1rem; font-weight: 600; }
+    .layer-desc { font-size: 0.88rem; color: var(--muted); margin-left: auto; text-align: right; }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 960px) {
+      :root { --nav-w: 210px; }
+      #main { padding: 1.5rem 1.5rem 4rem; }
+      .grid2, .cmp { grid-template-columns: 1fr; }
+      .grid3 { grid-template-columns: 1fr 1fr; }
+      .grid4 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      #nav { display: none; }
+      #main { margin-left: 0; }
+      .grid3, .grid4 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Swarm node diagram ──────────────────────────────────── */
+    svg.swarm-svg { width: 100%; max-width: 480px; display: block; margin: 0 auto; }
+
+    /* ── Appendix diagram system ─────────────────────────────── */
+    .ad { max-width: 660px; margin: 0 auto; }
+    .ad-center { text-align: center; }
+    .ad-cap {
+      display: inline-block;
+      border-radius: 8px;
+      padding: 0.45rem 1.7rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    /* vertical arrow spacer */
+    .ad-va {
+      text-align: center;
+      color: #fff;
+      font-size: 1.3rem;
+      line-height: 1;
+      margin: 0.38rem 0;
+    }
+    /* horizontal arrow between chain nodes */
+    .ad-ha {
+      color: #fff;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      padding: 0 0.35rem;
+      flex-shrink: 0;
+    }
+    /* standard node box */
+    .ad-node {
+      border-radius: 10px;
+      padding: 0.65rem 0.85rem;
+      text-align: center;
+    }
+    /* larger prominent node */
+    .ad-node-lg {
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      text-align: center;
+    }
+    /* node typography */
+    .ad-lbl  { font-size: 0.63rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 0.2rem; }
+    .ad-ttl  { font-size: 0.95rem; font-weight: 700; }
+    .ad-desc { font-size: 0.7rem;  color: var(--muted); margin-top: 0.15rem; }
+    .ad-sm-title { font-size: 0.8rem;  font-weight: 700; }
+    .ad-sm-desc  { font-size: 0.65rem; color: var(--muted); margin-top: 0.15rem; }
+    /* symmetric grid layouts */
+    .ad-g2 { display: grid; grid-template-columns: 1fr 1fr;           gap: 0.7rem; }
+    .ad-g4 { display: grid; grid-template-columns: repeat(4,1fr);     gap: 0.6rem; }
+    .ad-g5 { display: grid; grid-template-columns: repeat(5,1fr);     gap: 0.45rem; }
+    /* fan-out arrow rows — columns match matching grid */
+    .ad-fa4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.6rem;  color: #fff; font-size: 1.1rem; text-align: center; margin: 0.28rem 0; }
+    .ad-fa5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 0.45rem; color: #fff; font-size: 1.1rem; text-align: center; margin: 0.28rem 0; }
+    /* horizontal chain (sequential diagram) */
+    .ad-chain { display: flex; align-items: stretch; overflow-x: auto; }
+  </style>
+</head>
+<body>
+
+<!-- ═════════════════════════════════════════════════════════════ -->
+<!--  LEFT NAV                                                     -->
+<!-- ═════════════════════════════════════════════════════════════ -->
+<nav id="nav">
+  <div class="nav-logo">
+    <h1>AI Systems Guide</h1>
+    <p>Agents · Harnesses · Swarms</p>
+  </div>
+
+  <!-- Intro -->
+  <div class="nav-group">
+    <a class="nav-l0" href="#intro" onclick="navClick(event,'intro')">Introduction</a>
+  </div>
+
+  <!-- AI Agents -->
+  <div class="nav-group">
+    <div class="nav-l0" onclick="toggle('g-agents')">
+      <span>AI Agents</span>
+      <span class="nbadge nb-blue">Core</span>
+      <span class="caret" id="g-agents-c">▶</span>
+    </div>
+    <div class="nav-children open" id="g-agents">
+      <a class="nav-l1" href="#agent-what" onclick="navClick(event,'agent-what')">What is an AI Agent?</a>
+      <a class="nav-l1" href="#agent-formula" onclick="navClick(event,'agent-formula')">The Agent Formula</a>
+      <a class="nav-l1" href="#agent-anatomy" onclick="navClick(event,'agent-anatomy')">Agent Anatomy</a>
+      <a class="nav-l1" href="#agent-loop" onclick="navClick(event,'agent-loop')">The Agent Loop</a>
+    </div>
+  </div>
+
+  <!-- AI Harness -->
+  <div class="nav-group">
+    <div class="nav-l0" onclick="toggle('g-harness')">
+      <span>AI Harness</span>
+      <span class="nbadge nb-green">Runtime</span>
+      <span class="caret" id="g-harness-c">▶</span>
+    </div>
+    <div class="nav-children open" id="g-harness">
+      <a class="nav-l1" href="#harness-overview" onclick="navClick(event,'harness-overview')">Overview</a>
+
+      <!-- Production Runtime sub-group -->
+      <div class="nav-l1 sub-header" onclick="toggle('g-runtime')">
+        <span>Production Runtime</span>
+        <span class="caret" id="g-runtime-c">▶</span>
+      </div>
+      <div class="nav-children open" id="g-runtime">
+        <a class="nav-l2" href="#rt-memory"     onclick="navClick(event,'rt-memory')">Memory &amp; State</a>
+        <a class="nav-l2" href="#rt-tools"      onclick="navClick(event,'rt-tools')">Tool Execution</a>
+        <a class="nav-l2" href="#rt-guardrails" onclick="navClick(event,'rt-guardrails')">Guardrails</a>
+        <a class="nav-l2" href="#rt-loops"      onclick="navClick(event,'rt-loops')">Orchestration Loops</a>
+        <a class="nav-l2" href="#rt-frameworks" onclick="navClick(event,'rt-frameworks')">Frameworks</a>
+      </div>
+
+      <!-- Evaluation Harness sub-group -->
+      <div class="nav-l1 sub-header" onclick="toggle('g-eval')">
+        <span>Evaluation Harness</span>
+        <span class="caret" id="g-eval-c">▶</span>
+      </div>
+      <div class="nav-children open" id="g-eval">
+        <a class="nav-l2" href="#ev-overview"   onclick="navClick(event,'ev-overview')">Overview</a>
+        <a class="nav-l2" href="#ev-traces"     onclick="navClick(event,'ev-traces')">Trace Replays</a>
+        <a class="nav-l2" href="#ev-verifiers"  onclick="navClick(event,'ev-verifiers')">Deterministic Verifiers</a>
+        <a class="nav-l2" href="#ev-cicd"       onclick="navClick(event,'ev-cicd')">CI/CD Integration</a>
+        <a class="nav-l2" href="#ev-tools"      onclick="navClick(event,'ev-tools')">Evaluation Tools</a>
+      </div>
+
+      <a class="nav-l1" href="#meta-harness" onclick="navClick(event,'meta-harness')">Meta-Harness</a>
+    </div>
+  </div>
+
+  <!-- Agent Swarms -->
+  <div class="nav-group">
+    <div class="nav-l0" onclick="toggle('g-swarms')">
+      <span>Agent Swarms</span>
+      <span class="nbadge nb-amber">Emerging</span>
+      <span class="caret" id="g-swarms-c">▶</span>
+    </div>
+    <div class="nav-children open" id="g-swarms">
+      <a class="nav-l1" href="#sw-what"          onclick="navClick(event,'sw-what')">What is an Agent Swarm?</a>
+      <a class="nav-l1" href="#sw-arch"          onclick="navClick(event,'sw-arch')">Architecture Patterns</a>
+      <a class="nav-l1" href="#sw-orchestration" onclick="navClick(event,'sw-orchestration')">Orchestration Models</a>
+      <a class="nav-l1" href="#sw-usecases"      onclick="navClick(event,'sw-usecases')">Use Cases</a>
+      <a class="nav-l1" href="#sw-frameworks"    onclick="navClick(event,'sw-frameworks')">Frameworks</a>
+      <a class="nav-l1" href="#sw-challenges"    onclick="navClick(event,'sw-challenges')">Challenges</a>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="nav-group">
+    <a class="nav-l0" href="#summary" onclick="navClick(event,'summary')">Summary &amp; Comparison</a>
+  </div>
+
+  <!-- Appendix -->
+  <div class="nav-group">
+    <div class="nav-l0" onclick="toggle('g-appendix')">
+      <span>Appendix</span>
+      <span class="nbadge" style="background:rgba(167,139,250,.18);color:var(--violet)">Examples</span>
+      <span class="caret" id="g-appendix-c">▶</span>
+    </div>
+    <div class="nav-children open" id="g-appendix">
+      <a class="nav-l1" href="#app-single"      onclick="navClick(event,'app-single')">A · Single Agent Stack</a>
+      <a class="nav-l1" href="#app-hierarchical" onclick="navClick(event,'app-hierarchical')">B · Hierarchical Swarm</a>
+      <a class="nav-l1" href="#app-sequential"  onclick="navClick(event,'app-sequential')">C · Sequential Pipeline</a>
+      <a class="nav-l1" href="#app-parallel"    onclick="navClick(event,'app-parallel')">D · Parallel Fan-out</a>
+      <a class="nav-l1" href="#app-refinement"  onclick="navClick(event,'app-refinement')">E · Iterative Refinement</a>
+      <a class="nav-l1" href="#app-eval"        onclick="navClick(event,'app-eval')">F · Eval + CI/CD Gate</a>
+      <a class="nav-l1" href="#app-meta"        onclick="navClick(event,'app-meta')">G · Meta-Harness Loop</a>
+      <a class="nav-l1" href="#app-blackboard"  onclick="navClick(event,'app-blackboard')">H · Blackboard</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═════════════════════════════════════════════════════════════ -->
+<!--  MAIN CONTENT                                                 -->
+<!-- ═════════════════════════════════════════════════════════════ -->
+<main id="main">
+
+  <!-- ── HERO ──────────────────────────────────────────────────── -->
+  <span class="anchor" id="intro"></span>
+  <div class="hero">
+    <div class="stag stag-blue">Reference Guide · 2026</div>
+    <h1 class="hero-title">AI Agents, Harnesses<br>&amp; Agent Swarms</h1>
+    <p class="lead">A comprehensive guide to the infrastructure, patterns, and architectures powering modern autonomous AI systems — from the anatomy of a single agent to the coordinated intelligence of a multi-agent swarm.</p>
+    <div class="pills">
+      <span class="pill pill-blue">AI Agents</span>
+      <span class="pill pill-green">Production Harnesses</span>
+      <span class="pill pill-green">Evaluation Harnesses</span>
+      <span class="pill pill-cyan">Meta-Harness</span>
+      <span class="pill pill-amber">Agent Swarms</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  AI AGENTS                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <span class="anchor" id="agent-what"></span>
+    <div class="stag stag-blue">AI Agents</div>
+    <h2><span class="sec-num">1.</span>What is an AI Agent?</h2>
+    <p class="lead">An AI agent is an autonomous system that perceives its environment, reasons about a goal, selects actions, executes those actions using tools, observes the results, and iterates — all without step-by-step human instruction.</p>
+
+    <p>Unlike a simple chatbot that responds to a single prompt and stops, an agent operates in a continuous loop: observe → plan → act → observe again. This cycle enables it to tackle multi-step tasks, recover from failures, and use external tools like web search, code execution, or database queries.</p>
+
+    <div class="callout callout-blue">
+      <span class="callout-icon">💡</span>
+      <p><strong>Key distinction:</strong> A raw Large Language Model (LLM) is a stateless text predictor — give it tokens, receive tokens. Wrap it in a harness that provides memory, tools, and an execution loop, and you get an AI agent capable of autonomous goal-directed behavior across many steps and sessions.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card bl-accent">
+        <h4>Traditional LLM</h4>
+        <ul class="flist">
+          <li><span class="ico" style="color:var(--rose)">✗</span>Single prompt → single response</li>
+          <li><span class="ico" style="color:var(--rose)">✗</span>No persistent memory across calls</li>
+          <li><span class="ico" style="color:var(--rose)">✗</span>Cannot execute external tools</li>
+          <li><span class="ico" style="color:var(--rose)">✗</span>Stateless — starts fresh every time</li>
+          <li><span class="ico" style="color:var(--rose)">✗</span>Human orchestrates every step</li>
+        </ul>
+      </div>
+      <div class="card bl-green">
+        <h4>AI Agent</h4>
+        <ul class="flist">
+          <li><span class="ico" style="color:var(--green)">✓</span>Multi-step reasoning and planning</li>
+          <li><span class="ico" style="color:var(--green)">✓</span>Persistent memory across sessions</li>
+          <li><span class="ico" style="color:var(--green)">✓</span>Executes real-world tool calls</li>
+          <li><span class="ico" style="color:var(--green)">✓</span>Self-corrects on failure</li>
+          <li><span class="ico" style="color:var(--green)">✓</span>Pursues goals autonomously</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Formula -->
+  <div class="subsection">
+    <span class="anchor" id="agent-formula"></span>
+    <h3>The Agent Formula</h3>
+    <p>The industry has converged on a canonical definition that cleanly separates what an agent <em>thinks</em> from the infrastructure that makes it <em>act</em>:</p>
+
+    <div class="formula">
+      <span class="fterm ft-blue">Agent</span>
+      <span class="fplus">=</span>
+      <span class="fterm ft-green">Model</span>
+      <span class="fplus">+</span>
+      <span class="fterm ft-amber">Harness</span>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4>🧠 The Model (CPU + RAM)</h4>
+        <p style="font-size:0.85rem;margin:0">The LLM handles all reasoning. Think of it as the <strong>CPU</strong> — the raw compute. Its context window is <strong>volatile RAM</strong>: fast and immediately accessible, but wiped when the session ends.</p>
+      </div>
+      <div class="card">
+        <h4>⚙️ The Harness (Operating System)</h4>
+        <p style="font-size:0.85rem;margin:0">The infrastructure wrapping the model. Like an <strong>OS</strong>, it manages persistent state, schedules tools, enforces permissions, and runs the execution loop that drives the agent forward.</p>
+      </div>
+    </div>
+
+    <p>As foundation models become commoditized, the harness is what determines whether an agent is <em>reliable in production</em>. This insight has elevated <strong>Harness Engineering</strong> into a core discipline — the claim being that up to 70 % of an agent's real-world performance lives outside the model itself.</p>
+  </div>
+
+  <!-- Agent Anatomy -->
+  <div class="subsection">
+    <span class="anchor" id="agent-anatomy"></span>
+    <h3>Agent Anatomy</h3>
+    <p>A fully-capable AI agent combines five integrated layers:</p>
+
+    <div class="diag">
+      <div style="display:flex;flex-direction:column;gap:0.55rem;max-width:580px;margin:0 auto;">
+        <div class="layer" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.4)">
+          <span class="layer-lbl">Goal</span>
+          <span class="layer-name" style="color:var(--accent2)">Task / Objective</span>
+          <span class="layer-desc">User or system-defined goal</span>
+        </div>
+        <div class="flow-arrow">↕</div>
+        <div class="layer" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.38)">
+          <span class="layer-lbl">Reason</span>
+          <span class="layer-name" style="color:var(--green)">Planning &amp; Reasoning</span>
+          <span class="layer-desc">LLM decomposes task into steps</span>
+        </div>
+        <div class="flow-arrow">↕</div>
+        <div class="layer" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.38)">
+          <span class="layer-lbl">Act</span>
+          <span class="layer-name" style="color:var(--amber)">Tool Use &amp; Execution</span>
+          <span class="layer-desc">Search · Code · APIs · Files</span>
+        </div>
+        <div class="flow-arrow">↕</div>
+        <div class="layer" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38)">
+          <span class="layer-lbl">Observe</span>
+          <span class="layer-name" style="color:var(--cyan)">Observation &amp; Feedback</span>
+          <span class="layer-desc">Results re-injected into context</span>
+        </div>
+        <div class="flow-arrow">↕</div>
+        <div class="layer" style="background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.38)">
+          <span class="layer-lbl">Memory</span>
+          <span class="layer-name" style="color:var(--rose)">Memory &amp; State</span>
+          <span class="layer-desc">Short-term (context) + Long-term (storage)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Loop -->
+  <div class="subsection">
+    <span class="anchor" id="agent-loop"></span>
+    <h3>The Agent Loop</h3>
+    <p>Unlike a one-shot chat response, an agent executes a persistent <strong>observe → think → act</strong> cycle that continues until the goal is met or a stopping condition is reached. The harness controls this loop — it decides when to keep iterating and when to declare success.</p>
+
+    <div class="diag" style="overflow-x:auto;">
+      <div style="display:flex;align-items:center;flex-wrap:nowrap;gap:0.5rem;min-width:max-content;padding:0.25rem 0;">
+        <div class="dbox" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.45);min-width:140px;flex:1;">
+          <div style="font-size:1rem;font-weight:700;color:var(--accent2)">Observe</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-top:0.3rem">Read environment &amp; tool outputs</div>
+        </div>
+        <div style="color:#ffffff;font-size:1.5rem;flex-shrink:0;">→</div>
+        <div class="dbox" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.38);min-width:140px;flex:1;">
+          <div style="font-size:1rem;font-weight:700;color:var(--green)">Think</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-top:0.3rem">Reason, plan, select action</div>
+        </div>
+        <div style="color:#ffffff;font-size:1.5rem;flex-shrink:0;">→</div>
+        <div class="dbox" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.38);min-width:140px;flex:1;">
+          <div style="font-size:1rem;font-weight:700;color:var(--amber)">Act</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-top:0.3rem">Call tools, write files, query APIs</div>
+        </div>
+        <div style="color:#ffffff;font-size:1.5rem;flex-shrink:0;">→</div>
+        <div class="dbox" style="background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.38);min-width:140px;flex:1;">
+          <div style="font-size:1rem;font-weight:700;color:var(--rose)">Evaluate</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-top:0.3rem">Did I reach the goal?</div>
+        </div>
+      </div>
+      <div style="margin-top:0.85rem;font-size:0.8rem;color:var(--muted);text-align:center;">↺ Loop continues until goal is met or harness stops it</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  AI HARNESS                                                 -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <span class="anchor" id="harness-overview"></span>
+    <div class="stag stag-green">AI Harness</div>
+    <h2><span class="sec-num">2.</span>The AI Harness</h2>
+    <p class="lead">A harness is the infrastructure layer that wraps a language model and transforms it from a stateless text predictor into an autonomous agent capable of persisting state, running tools, enforcing policies, and completing long-horizon tasks reliably.</p>
+
+    <p>There are two distinct types of harness, each serving a different phase of the AI development lifecycle. Together they form the backbone of any production AI agent system.</p>
+
+    <div class="cmp">
+      <div class="cmp-col">
+        <div class="cmp-hdr" style="background:rgba(16,185,129,.1);color:var(--green)">⚡ Production Runtime Harness</div>
+        <div class="cmp-body">
+          <div class="cmp-item"><span style="color:var(--green)">→</span><span>Manages live task execution in real-time</span></div>
+          <div class="cmp-item"><span style="color:var(--green)">→</span><span>Interfaces with real APIs &amp; databases</span></div>
+          <div class="cmp-item"><span style="color:var(--green)">→</span><span>Enforces security boundaries &amp; permissions</span></div>
+          <div class="cmp-item"><span style="color:var(--green)">→</span><span>Intercepts failures, prompts self-correction</span></div>
+          <div class="cmp-item"><span style="color:var(--green)">→</span><span>Active in production 24 / 7</span></div>
+        </div>
+      </div>
+      <div class="cmp-col">
+        <div class="cmp-hdr" style="background:rgba(99,102,241,.1);color:var(--accent2)">🧪 Evaluation Harness</div>
+        <div class="cmp-body">
+          <div class="cmp-item"><span style="color:var(--accent2)">→</span><span>Tests &amp; benchmarks agent behavior</span></div>
+          <div class="cmp-item"><span style="color:var(--accent2)">→</span><span>Uses mocked tools and trace replays</span></div>
+          <div class="cmp-item"><span style="color:var(--accent2)">→</span><span>Scores decision trajectories objectively</span></div>
+          <div class="cmp-item"><span style="color:var(--accent2)">→</span><span>Blocks deployments on regression in CI</span></div>
+          <div class="cmp-item"><span style="color:var(--accent2)">→</span><span>Used during development &amp; pre-deploy</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Feature</th><th>Production Runtime</th><th>Evaluation Harness</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Primary function</strong></td><td>Manages live task execution, routes tool calls, handles state</td><td>Tests, benchmarks, and scores agent decisions &amp; trajectories</td></tr>
+          <tr><td><strong>Environment</strong></td><td>Live APIs, production databases, dynamic context windows</td><td>Simulated sandboxes, mocked tools, recorded trace replays</td></tr>
+          <tr><td><strong>Error handling</strong></td><td>Intercepts failures; coaches agent to self-correct before continuing</td><td>Logs errors; calculates objective success metrics for engineers</td></tr>
+          <tr><td><strong>System analogy</strong></td><td>Operating system (CPU = model, RAM = context window)</td><td>Dynamometer testing an engine in a controlled factory setting</td></tr>
+          <tr><td><strong>Examples</strong></td><td>LangGraph, CrewAI, AutoGen, Claude Code</td><td>Maxim AI, Braintrust, Arize Phoenix, Langfuse</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── PRODUCTION RUNTIME ─────────────────────────────────── -->
+  <div class="subsection">
+    <span class="anchor" id="rt-memory"></span>
+    <div class="stag stag-green">Production Runtime · Memory</div>
+    <h3>Memory &amp; State Management</h3>
+    <p>A model starts blind at every new session — its context window is empty. The runtime harness solves this by maintaining two tiers of memory that work together:</p>
+
+    <div class="grid2">
+      <div class="card bl-cyan">
+        <h4>⚡ Short-Term Memory</h4>
+        <p style="font-size:0.85rem;margin:0">Lives inside the <strong>context window</strong>. The harness decides what to inject into each model call: current task state, recent tool outputs, conversation history, and relevant retrieved facts. Fast but bounded by the token limit.</p>
+      </div>
+      <div class="card bl-amber">
+        <h4>💾 Long-Term Memory</h4>
+        <p style="font-size:0.85rem;margin:0">Persisted in <strong>external storage</strong> — relational DBs, vector stores, or structured files. Survives session boundaries. The harness retrieves relevant memories at task-start and commits new facts at task-end.</p>
+      </div>
+    </div>
+
+    <p>Sophisticated harnesses also implement <strong>memory compaction</strong>: summarizing older context to free up token budget while preserving critical information. This compaction strategy itself becomes an optimization target of the Meta-Harness paradigm.</p>
+  </div>
+
+  <div class="subsection">
+    <span class="anchor" id="rt-tools"></span>
+    <h3>Tool Execution &amp; Sandboxing</h3>
+    <p>The LLM cannot directly run code or call an API — it can only express <em>intent</em>. The harness translates intent into real-world action through a tool execution layer, running all code in isolated sandboxes:</p>
+
+    <div class="card bl-accent">
+      <ul class="flist">
+        <li><span class="ico">🔍</span><div><strong>Web Search</strong> — Agent requests a query; harness calls the search API, returns ranked results</div></li>
+        <li><span class="ico">💻</span><div><strong>Code Execution</strong> — Code runs inside an ephemeral Docker container; stdout/stderr fed back to the model</div></li>
+        <li><span class="ico">📁</span><div><strong>File System Access</strong> — Read/write operations gated by an allowlist enforced at the harness layer, not trusted from the model</div></li>
+        <li><span class="ico">🌐</span><div><strong>External API Calls</strong> — Database queries, REST calls, messaging services — routed and validated by the harness</div></li>
+        <li><span class="ico">🤝</span><div><strong>Sub-Agent Spawning</strong> — The harness can instantiate child agents, delegate subtasks, and await their results</div></li>
+      </ul>
+    </div>
+
+    <div class="callout callout-amber">
+      <span class="callout-icon">⚠️</span>
+      <p>Sandboxing is non-negotiable: without isolation, a misbehaving agent could corrupt production data or escape to the host filesystem. Robust harnesses run all code in ephemeral containers with restricted network access and filesystem mounts.</p>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <span class="anchor" id="rt-guardrails"></span>
+    <h3>Guardrails &amp; Security</h3>
+    <p>The harness acts as a <strong>mechanical enforcer</strong> of policy — hard infrastructure-level enforcement, not soft guidance passed to the model in a prompt. Every action is checked before execution:</p>
+
+    <div class="grid3">
+      <div class="card">
+        <h4>🚦 Permission Boundaries</h4>
+        <p style="margin:0;font-size:0.83rem">Every action is checked against an allowlist / denylist. The agent can only do what the harness explicitly permits — not what it thinks is allowed.</p>
+      </div>
+      <div class="card">
+        <h4>🛑 Action Blocking</h4>
+        <p style="margin:0;font-size:0.83rem">Destructive or irreversible actions (deleting records, deploying to production) require explicit human confirmation or are blocked outright.</p>
+      </div>
+      <div class="card">
+        <h4>🔄 Self-Correction</h4>
+        <p style="margin:0;font-size:0.83rem">When a blocked action is attempted, the harness feeds the refusal back into context, coaching the agent to find a safer alternative path to its goal.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <span class="anchor" id="rt-loops"></span>
+    <h3>Orchestration Loops</h3>
+    <p>The harness controls the agent's iteration cycle. A prominent pattern is the <strong>Ralph Loop</strong> (also called the "Ralph Wiggum Pattern"): instead of letting the agent declare success prematurely, the harness intercepts every completion attempt, runs an objective verification suite, and forces re-iteration until criteria are met.</p>
+
+    <div class="diag">
+      <div style="display:flex;flex-direction:column;gap:0.5rem;max-width:440px;margin:0 auto;">
+        <div class="dbox" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.45)">
+          <span style="font-size:1rem;font-weight:700;color:var(--accent2)">1 · Agent produces output</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="dbox" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.45)">
+          <span style="font-size:1rem;font-weight:700;color:var(--amber)">2 · Harness intercepts completion signal</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="dbox" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.45)">
+          <span style="font-size:1rem;font-weight:700;color:var(--cyan)">3 · Run automated test suite / verifier</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+          <div class="dbox" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45)">
+            <span style="font-size:0.95rem;color:var(--green)">✓ Pass<br><span style="opacity:.7;font-size:0.85rem">Task complete</span></span>
+          </div>
+          <div class="dbox" style="background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.45)">
+            <span style="font-size:0.95rem;color:var(--rose)">✗ Fail<br><span style="opacity:.7;font-size:0.85rem">Force refinement</span></span>
+          </div>
+        </div>
+        <div style="background:rgba(244,63,94,.04);border:1px dashed rgba(244,63,94,.2);border-radius:8px;padding:0.5rem;text-align:center;">
+          <span style="font-size:0.87rem;color:var(--muted)">↺ Failure detail injected into context → loop from step 1</span>
+        </div>
+      </div>
+    </div>
+
+    <p>This pattern eliminates premature completion. The agent cannot simply say "done" — the harness holds it accountable to objective, deterministic criteria before releasing control.</p>
+  </div>
+
+  <div class="subsection">
+    <span class="anchor" id="rt-frameworks"></span>
+    <h3>Runtime Frameworks</h3>
+    <div class="grid2">
+      <div class="card bl-accent">
+        <h4>LangGraph</h4>
+        <p style="font-size:0.84rem;margin-bottom:0.7rem">Low-level graph-based runtime providing durable execution and stateful multi-agent workflows. Agents persist through failures and resume from checkpoints. Nodes are agents; edges define data flow with conditional branching.</p>
+        <div class="pills"><span class="pill pill-blue">Stateful</span><span class="pill pill-blue">Durable</span><span class="pill pill-blue">Graph-based</span></div>
+      </div>
+      <div class="card bl-accent">
+        <h4>CrewAI</h4>
+        <p style="font-size:0.84rem;margin-bottom:0.7rem">High-level framework for deploying collaborative teams ("crews") of specialized agents. Each agent has a defined role, goal, and backstory. Tasks are delegated and results synthesized by the crew.</p>
+        <div class="pills"><span class="pill pill-blue">Roles</span><span class="pill pill-blue">Crews</span><span class="pill pill-blue">Enterprise</span></div>
+      </div>
+      <div class="card bl-accent">
+        <h4>AutoGen (Microsoft)</h4>
+        <p style="font-size:0.84rem;margin-bottom:0.7rem">Framework for conversational multi-agent patterns with strong human-in-the-loop support. Agents communicate via structured message passing with configurable termination conditions.</p>
+        <div class="pills"><span class="pill pill-blue">Conversational</span><span class="pill pill-blue">Human-in-loop</span></div>
+      </div>
+      <div class="card bl-accent">
+        <h4>Claude Code</h4>
+        <p style="font-size:0.84rem;margin-bottom:0.7rem">Anthropic's agentic coding CLI — itself a production harness. It orchestrates file access, terminal commands, and iterative code refinement with permission-gated safety guardrails built in at the harness layer.</p>
+        <div class="pills"><span class="pill pill-blue">Coding</span><span class="pill pill-blue">CLI</span><span class="pill pill-blue">Safety-first</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── EVALUATION HARNESS ──────────────────────────────────── -->
+  <div class="subsection">
+    <span class="anchor" id="ev-overview"></span>
+    <div class="stag stag-blue">Evaluation Harness</div>
+    <h3>Evaluation Harness Overview</h3>
+    <p>Traditional unit tests are deterministic: same input always produces the same output. AI agents are non-deterministic: even with identical prompts the model may reason differently, use a different tool sequence, or arrive at a different answer.</p>
+
+    <p>An evaluation harness applies the same orchestration principles as a runtime harness, but directs them entirely toward <strong>quality control</strong> — coordinating inputs, scoring methods, and simulated environments to determine whether an agent is ready for production.</p>
+
+    <div class="hbox">
+      <h4>Why Standard Testing Fails for Agents</h4>
+      <p>A production agent must handle thousands of unpredictable real-world scenarios reliably. Checking one happy-path scenario manually won't catch the edge case that fails in production at 2 AM. Evaluation harnesses test the agent's entire reasoning <em>trajectory</em> at scale — not just the final answer — and they do it safely in simulation, automatically, on every code push.</p>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <span class="anchor" id="ev-traces"></span>
+    <h3>Trace Replays</h3>
+    <p>Testing against live APIs for every evaluation run is slow, expensive, and risks corrupting real data. Evaluation harnesses solve this with <strong>replay testing</strong>:</p>
+
+    <div class="card bl-cyan">
+      <ol style="padding-left:1.2rem;font-size:0.87rem;color:var(--muted);line-height:2.1">
+        <li><strong>Capture</strong> — Record a complete production session: every input, tool call, API response, and result as a structured trace file.</li>
+        <li><strong>Store</strong> — Save these traces as deterministic fixtures in version control alongside the agent's source code.</li>
+        <li><strong>Replay</strong> — When testing a new version, feed it the recorded tool responses instead of calling live APIs. No real-world side effects.</li>
+        <li><strong>Compare</strong> — Measure whether the new version makes the same correct decisions on the same recorded inputs as the known-good baseline.</li>
+      </ol>
+    </div>
+
+    <p>This lets engineers debug edge cases at near-zero cost, run the full test suite in CI/CD in seconds, and safely test experimental changes without exposing production systems to half-baked code.</p>
+  </div>
+
+  <div class="subsection">
+    <span class="anchor" id="ev-verifiers"></span>
+    <h3>Deterministic Verifiers</h3>
+    <p>Scoring an agent's output by asking a second LLM to judge it introduces a new source of variance — the judge can be wrong or inconsistent. Modern evaluation harnesses prefer <strong>execution-based verification</strong>:</p>
+
+    <div class="grid2">
+      <div class="card bl-green">
+        <h4>✅ Execution-Based (preferred)</h4>
+        <p style="font-size:0.84rem;margin:0">Run the agent's output in an isolated container and assert against objective outcomes: did the code pass its test suite? Did the SQL return the right rows? Did the file get created with the expected checksum? Reproducible and zero-variance.</p>
+      </div>
+      <div class="card bl-rose">
+        <h4>⚖️ LLM-as-Judge (supplemental)</h4>
+        <p style="font-size:0.84rem;margin:0">Ask a second LLM to score quality on subjective criteria like tone or creativity. Useful when there is no objective ground truth, but introduces variance and cost. Best combined with execution-based checks, not used alone.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <span class="anchor" id="ev-cicd"></span>
+    <h3>CI/CD Integration</h3>
+    <p>Evaluation harnesses integrate directly into software delivery pipelines, creating an automated safety gate on every deployment:</p>
+
+    <div class="diag" style="text-align:center">
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center">
+        <div class="dbox" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.45);min-width:100px">
+          <div style="font-size:0.92rem;font-weight:700;color:var(--accent2)">Code<br>Change</div>
+        </div>
+        <span style="color:#ffffff;font-size:1.4rem;">→</span>
+        <div class="dbox" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.45);min-width:100px">
+          <div style="font-size:0.92rem;font-weight:700;color:var(--amber)">Trigger<br>Eval Run</div>
+        </div>
+        <span style="color:#ffffff;font-size:1.4rem;">→</span>
+        <div class="dbox" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.45);min-width:120px">
+          <div style="font-size:0.92rem;font-weight:700;color:var(--cyan)">Trace Replay<br>Suite</div>
+        </div>
+        <span style="color:#ffffff;font-size:1.4rem;">→</span>
+        <div class="dbox" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45);min-width:110px">
+          <div style="font-size:0.92rem;font-weight:700;color:var(--green)">Score vs<br>Thresholds</div>
+        </div>
+        <span style="color:#ffffff;font-size:1.4rem;">→</span>
+        <div style="display:flex;flex-direction:column;gap:0.4rem">
+          <div style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45);border-radius:6px;padding:0.4rem 0.85rem;font-size:0.88rem;color:var(--green)">✓ Pass → Deploy</div>
+          <div style="background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.45);border-radius:6px;padding:0.4rem 0.85rem;font-size:0.88rem;color:var(--rose)">✗ Fail → Block</div>
+        </div>
+      </div>
+    </div>
+
+    <p>Teams set threshold scores for metrics like hallucination rate, tool utilization accuracy, task success rate, and response latency. Any regression below these thresholds automatically blocks the deployment without requiring human review of every change.</p>
+  </div>
+
+  <div class="subsection">
+    <span class="anchor" id="ev-tools"></span>
+    <h3>Evaluation Tools</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Platform</th><th>Key Strengths</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Maxim AI</strong></td><td>End-to-end simulation and observability. HTTP API endpoint-based testing — evaluate without modifying your codebase.</td><td>Enterprise teams needing full-stack evaluation with minimal integration effort</td></tr>
+          <tr><td><strong>Braintrust</strong></td><td>Rapid prototyping, native CI/CD integration, experiment tracking, scoring dashboards</td><td>Teams with fast deploy cycles who need evaluation baked into the delivery pipeline</td></tr>
+          <tr><td><strong>Arize Phoenix</strong></td><td>ML observability, open-source, production monitoring, regression detection across model updates</td><td>Teams prioritizing open-source tooling and ongoing production observability</td></tr>
+          <tr><td><strong>Langfuse</strong></td><td>Open-source, developer-centric, deep tracing of LLM execution paths and token costs</td><td>Engineering teams who want full transparency into agent execution across every step</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── META-HARNESS ───────────────────────────────────────── -->
+  <div class="subsection">
+    <span class="anchor" id="meta-harness"></span>
+    <div class="stag stag-cyan">Meta-Harness · Emerging</div>
+    <h3>The Meta-Harness Paradigm</h3>
+    <p>Historically, human engineers manually adjusted the runtime harness based on metrics from the evaluation harness — a slow, manual feedback loop. The <strong>Meta-Harness</strong> paradigm (highlighted in 2026 research from Stanford and MIT) connects the two systems autonomously, making the harness itself the optimization target.</p>
+
+    <div class="hbox">
+      <p style="font-size:0.9rem;margin:0">An evaluator agent monitors the production runtime harness, analyzing up to <strong>10 million tokens</strong> of diagnostic history, execution traces, and failure logs. Instead of adjusting the underlying model weights, a "proposer" coding agent autonomously <strong>rewrites the harness code</strong> — optimizing how memory is compacted, how tools are formatted, and how context is managed — delivering massive performance improvements without touching the foundation model.</p>
+    </div>
+
+    <div class="diag">
+      <div style="display:flex;flex-direction:column;gap:0.65rem;max-width:520px;margin:0 auto;">
+        <div class="dbox" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.45)">
+          <div style="font-size:1rem;font-weight:700;color:var(--cyan)">Evaluator Agent (Meta-Harness)</div>
+          <div style="font-size:0.87rem;color:var(--muted);margin-top:0.25rem">Ingests traces, failure logs, diagnostic history (up to 10M tokens)</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;text-align:center">
+          <div><div style="font-size:1.4rem;color:#ffffff">↙</div><div style="font-size:0.85rem;color:var(--muted)">analyzes failures</div></div>
+          <div><div style="font-size:1.4rem;color:#ffffff">↘</div><div style="font-size:0.85rem;color:var(--muted)">proposes rewrites</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">
+          <div class="dbox" style="background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.4)">
+            <div style="font-size:0.95rem;font-weight:700;color:var(--accent2)">Evaluation Harness</div>
+            <div style="font-size:0.84rem;color:var(--muted);margin-top:0.2rem">Provides metrics &amp; benchmark scores</div>
+          </div>
+          <div class="dbox" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.38)">
+            <div style="font-size:0.95rem;font-weight:700;color:var(--green)">Runtime Harness</div>
+            <div style="font-size:0.84rem;color:var(--muted);margin-top:0.2rem">Gets autonomously rewritten &amp; improved</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p>The result is a self-optimizing system: the evaluation harness teaches the runtime harness how to operate better, and this cycle runs continuously without human intervention. Organizations using this paradigm can build autonomous systems capable of surviving and adapting to chaotic real-world conditions at scale.</p>
+  </div>
+
+  <div class="divider"></div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  AGENT SWARMS                                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <span class="anchor" id="sw-what"></span>
+    <div class="stag stag-amber">Agent Swarms</div>
+    <h2><span class="sec-num">3.</span>Agent Swarms</h2>
+    <p class="lead">An Agent Swarm is a multi-agent architecture in which multiple AI agents — each with a defined role and specialized capability — collaborate in a coordinated system to solve tasks that are too complex, too large, or too multifaceted for any single agent to handle alone.</p>
+
+    <p>The term draws from biological swarm intelligence: like an ant colony, emergent collective behavior arises from many simpler agents acting on local information and a shared objective. No single agent is omniscient — instead, specialization and parallel execution allow the swarm to process information and act at a scale impossible for one agent.</p>
+
+    <p>Two-thirds of the agentic AI market now runs on coordinated multi-agent systems rather than single-agent solutions. The multi-agent AI market is projected to reach <strong>$236 billion by 2034</strong>, growing at roughly 46% CAGR.</p>
+
+    <div class="callout callout-amber">
+      <span class="callout-icon">🐝</span>
+      <p><strong>Core insight:</strong> In a swarm, the whole is greater than the sum of its parts. Specialization and parallelism allow a swarm to tackle problems that would exhaust a single agent's context window, take too long in serial, or require simultaneously deep expertise across multiple domains.</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <h4>🔀 Parallelism</h4>
+        <p style="margin:0;font-size:0.83rem">Multiple agents work simultaneously on different subtasks, dramatically reducing wall-clock time for complex operations.</p>
+      </div>
+      <div class="card">
+        <h4>🎯 Specialization</h4>
+        <p style="margin:0;font-size:0.83rem">Each agent is optimized, prompted, or fine-tuned for a specific role: researcher, coder, critic, planner, validator.</p>
+      </div>
+      <div class="card">
+        <h4>📈 Scalability</h4>
+        <p style="margin:0;font-size:0.83rem">Swarms scale horizontally — add more agents to handle more work without redesigning the core system.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Swarm Architecture -->
+  <div class="subsection">
+    <span class="anchor" id="sw-arch"></span>
+    <h3>Architecture Patterns</h3>
+    <p>Agent swarms can be organized according to four distinct topologies, each with different trade-offs in control, resilience, and debugging complexity:</p>
+
+    <!-- Hierarchical -->
+    <div class="card bl-amber" style="margin-bottom:0.85rem">
+      <h4>🏛️ Hierarchical — Orchestrator + Workers</h4>
+      <p style="font-size:0.87rem;margin-bottom:0.75rem">An <strong>orchestrator agent</strong> receives the top-level goal, decomposes it into subtasks, delegates each to a specialized worker agent, and synthesizes their results into a final output. Workers don't communicate with each other — all coordination flows through the orchestrator. <strong>The overwhelming majority of production deployments use this pattern</strong> because it creates a single traceable control flow that is straightforward to debug.</p>
+      <div class="pills" style="margin-bottom:1rem"><span class="pill pill-amber">Predictable</span><span class="pill pill-amber">Easy to debug</span><span class="pill pill-amber">Single control point</span><span class="pill pill-amber">Most common in production</span></div>
+      <div style="background:rgba(0,0,0,.2);border-radius:8px;padding:1rem;display:flex;flex-direction:column;align-items:center;gap:0.4rem">
+        <div style="background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:0.5rem 1.25rem;font-size:0.95rem;font-weight:700;color:var(--amber)">Orchestrator Agent</div>
+        <div style="font-size:1.4rem;color:#ffffff">↙ &nbsp; ↓ &nbsp; ↘</div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center">
+          <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.4);border-radius:6px;padding:0.45rem 0.9rem;font-size:0.88rem;color:var(--accent2);text-align:center">Worker A<br><span style="opacity:.65;font-size:0.78rem">Researcher</span></div>
+          <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.4);border-radius:6px;padding:0.45rem 0.9rem;font-size:0.88rem;color:var(--accent2);text-align:center">Worker B<br><span style="opacity:.65;font-size:0.78rem">Coder</span></div>
+          <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.4);border-radius:6px;padding:0.45rem 0.9rem;font-size:0.88rem;color:var(--accent2);text-align:center">Worker C<br><span style="opacity:.65;font-size:0.78rem">Critic</span></div>
+          <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.4);border-radius:6px;padding:0.45rem 0.9rem;font-size:0.88rem;color:var(--accent2);text-align:center">Worker D<br><span style="opacity:.65;font-size:0.78rem">Publisher</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Peer-to-peer -->
+    <div class="card bl-cyan" style="margin-bottom:0.85rem">
+      <h4>🕸️ Peer-to-Peer — Flat Mesh</h4>
+      <p style="font-size:0.87rem;margin-bottom:0.75rem">Agents communicate directly with each other, negotiating tasks and sharing results without a central coordinator. Routing intelligence is distributed across agents — each agent independently decides when to hand off control to a peer specialist. More resilient to single-point failures, but significantly harder to reason about and debug when unexpected routing occurs.</p>
+      <div class="pills"><span class="pill pill-cyan">Resilient</span><span class="pill pill-cyan">Decentralized</span><span class="pill pill-cyan">Complex to debug</span><span class="pill pill-cyan">OpenAI Swarm / Agents SDK</span></div>
+    </div>
+
+    <!-- Blackboard -->
+    <div class="card bl-green" style="margin-bottom:0.85rem">
+      <h4>📋 Blackboard Architecture</h4>
+      <p style="font-size:0.87rem;margin-bottom:0.75rem">A shared state store (the "blackboard") holds the current problem state and all intermediate results. Specialized agents monitor the blackboard and contribute when they can add value — no direct agent-to-agent communication required. Highly extensible: adding a new specialist agent means adding a new blackboard consumer, not rewiring an existing topology.</p>
+      <div class="pills"><span class="pill pill-green">Loosely coupled</span><span class="pill pill-green">Extensible</span><span class="pill pill-green">Observable shared state</span></div>
+    </div>
+
+    <!-- Market-based -->
+    <div class="card bl-violet">
+      <h4>🏪 Market-Based — Auction / Bid</h4>
+      <p style="font-size:0.87rem;margin-bottom:0.75rem">Agents bid for tasks based on their current capacity, skill match, or estimated cost. A task broker assigns work to the winning bidder. This model naturally load-balances across a heterogeneous pool of agents and is economically efficient — only the best-matched agent takes each task.</p>
+      <div class="pills"><span class="pill pill-violet">Load-balanced</span><span class="pill pill-violet">Dynamic routing</span><span class="pill pill-violet">Economically efficient</span></div>
+    </div>
+  </div>
+
+  <!-- Orchestration Models -->
+  <div class="subsection">
+    <span class="anchor" id="sw-orchestration"></span>
+    <h3>Orchestration Models</h3>
+    <p>Beyond topology, swarms differ in <em>how</em> agents coordinate the flow of work through the system:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Model</th><th>Description</th><th>Ideal When</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Sequential Pipeline</strong></td><td>Output of Agent A becomes input of Agent B. Linear, deterministic, easy to trace.</td><td>Tasks have clear ordered dependencies (draft → review → edit → publish)</td></tr>
+          <tr><td><strong>Parallel Fan-out</strong></td><td>Orchestrator dispatches N independent subtasks simultaneously; results aggregated when all complete.</td><td>Subtasks are independent and latency matters — process them concurrently</td></tr>
+          <tr><td><strong>Iterative Refinement</strong></td><td>Generator agent produces output; Critic agent evaluates and scores; loop continues until quality threshold is reached.</td><td>Quality matters more than speed; open-ended creative or analytical work</td></tr>
+          <tr><td><strong>Dynamic Routing</strong></td><td>A router agent inspects each incoming task and dispatches it to the best-suited specialist agent from a pool.</td><td>Heterogeneous workloads requiring different specialized capabilities</td></tr>
+          <tr><td><strong>Debate / Red Team</strong></td><td>Multiple agents independently produce competing solutions; an arbiter selects or synthesizes the best response.</td><td>High-stakes decisions where diverse viewpoints reduce risk of systematic errors</td></tr>
+          <tr><td><strong>Handoff Chain</strong></td><td>Each agent handles its specialty and explicitly transfers control to the next agent, carrying full conversation context through the transition.</td><td>Customer-facing workflows where context continuity across specialists is critical</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Use Cases -->
+  <div class="subsection">
+    <span class="anchor" id="sw-usecases"></span>
+    <h3>Use Cases</h3>
+    <div class="grid2">
+      <div class="card">
+        <h4>💻 Software Engineering</h4>
+        <p style="font-size:0.84rem;margin:0">A planning agent decomposes a feature. Coder agents implement in parallel by file or module. A test-writing agent creates and runs tests. A review agent checks quality. An orchestrator synthesizes the final PR.</p>
+      </div>
+      <div class="card">
+        <h4>🔬 Research &amp; Analysis</h4>
+        <p style="font-size:0.84rem;margin:0">Multiple agents simultaneously search different domains and databases. A synthesis agent merges findings. A fact-checking agent validates claims. A final agent produces a structured, cited report.</p>
+      </div>
+      <div class="card">
+        <h4>📊 Data Pipelines</h4>
+        <p style="font-size:0.84rem;margin:0">Ingestion agents pull from different sources. Transformation agents clean and normalize. Analysis agents compute insights in parallel. A reporting agent renders the final deliverable.</p>
+      </div>
+      <div class="card">
+        <h4>🎧 Customer Support</h4>
+        <p style="font-size:0.84rem;margin:0">A router agent classifies and triages tickets. Specialist agents handle billing, technical, and account issues. An escalation agent flags cases requiring human intervention and provides full context.</p>
+      </div>
+      <div class="card">
+        <h4>🛡️ Cybersecurity</h4>
+        <p style="font-size:0.84rem;margin:0">Scanning agents probe attack surfaces in parallel across different vectors. Analysis agents correlate findings. A prioritization agent ranks by severity. A remediation agent proposes specific fixes.</p>
+      </div>
+      <div class="card">
+        <h4>✍️ Content Production</h4>
+        <p style="font-size:0.84rem;margin:0">Research agent gathers facts and sources. Writer agent drafts. Editor agent refines style and structure. SEO agent optimizes for discovery. Publisher agent formats, schedules, and distributes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frameworks -->
+  <div class="subsection">
+    <span class="anchor" id="sw-frameworks"></span>
+    <h3>Swarm Frameworks</h3>
+    <div class="grid2">
+      <div class="card bl-amber">
+        <h4>OpenAI Agents SDK</h4>
+        <p style="font-size:0.84rem;margin-bottom:0.7rem">Released March 2025 as the production successor to the experimental Swarm framework. Keeps Swarm's core handoff primitives but adds guardrails, tracing, TypeScript support, and production-grade reliability. Agents transfer control via explicit handoffs that carry full conversation context through each transition.</p>
+        <div class="pills"><span class="pill pill-amber">Handoffs</span><span class="pill pill-amber">Guardrails</span><span class="pill pill-amber">Tracing</span><span class="pill pill-amber">Production-ready</span></div>
+      </div>
+      <div class="card bl-amber">
+        <h4>CrewAI</h4>
+        <p style="font-size:0.84rem;margin-bottom:0.7rem">Defines agents as crew members with distinct roles, goals, and backstories. Agents collaborate through structured task delegation. Tools can be shared across the entire crew. Widely adopted for enterprise multi-agent workflows.</p>
+        <div class="pills"><span class="pill pill-amber">Roles &amp; goals</span><span class="pill pill-amber">Shared tools</span><span class="pill pill-amber">Enterprise</span></div>
+      </div>
+      <div class="card bl-amber">
+        <h4>AutoGen (Microsoft)</h4>
+        <p style="font-size:0.84rem;margin-bottom:0.7rem">Multi-agent conversation framework with strong human-in-the-loop support. Agents communicate via structured message passing with configurable termination conditions. Excellent for debate patterns and review loops.</p>
+        <div class="pills"><span class="pill pill-amber">Conversational</span><span class="pill pill-amber">Human-in-loop</span><span class="pill pill-amber">Debate patterns</span></div>
+      </div>
+      <div class="card bl-amber">
+        <h4>LangGraph</h4>
+        <p style="font-size:0.84rem;margin-bottom:0.7rem">Graph-based execution model where nodes are agents and edges define data flow. Supports cycles, conditional branching, and parallel execution. Ideal for complex swarm topologies where hierarchical and mesh patterns are combined.</p>
+        <div class="pills"><span class="pill pill-amber">Graph-based</span><span class="pill pill-amber">Stateful</span><span class="pill pill-amber">Complex topologies</span></div>
+      </div>
+    </div>
+
+    <div class="callout callout-cyan">
+      <span class="callout-icon">🌟</span>
+      <p><strong>On the frontier:</strong> Moonshot AI's Kimi K2.5 is the first major LLM to integrate agent swarm coordination capabilities directly into its training objective — rather than bolting swarm behavior on via a framework at inference time. This suggests the next generation of models may natively understand how to participate in and coordinate swarms.</p>
+    </div>
+  </div>
+
+  <!-- Challenges -->
+  <div class="subsection">
+    <span class="anchor" id="sw-challenges"></span>
+    <h3>Challenges &amp; Considerations</h3>
+
+    <div class="callout callout-rose">
+      <span class="callout-icon">⚠️</span>
+      <p>Agent swarms introduce coordination complexity that doesn't exist with single agents. Robust harness infrastructure becomes even more critical at scale — every inter-agent communication is a potential failure point, and cascading coordination failures can surface only after deployment, in production, at the worst possible moment.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card bl-rose">
+        <h4>🔄 Coordination Overhead</h4>
+        <p style="font-size:0.84rem;margin:0">Inter-agent communication consumes tokens, time, and money. Poorly designed swarms spend more resources coordinating than doing actual work. Efficient message schemas and selective communication are essential to maintain a positive ROI.</p>
+      </div>
+      <div class="card bl-rose">
+        <h4>📡 Context Fragmentation</h4>
+        <p style="font-size:0.84rem;margin:0">Each agent has its own isolated context window. Critical shared context must be deliberately passed between agents at handoff points. The harness must carefully manage what each agent knows and when — there is no automatic global state.</p>
+      </div>
+      <div class="card bl-rose">
+        <h4>🌊 Error Propagation</h4>
+        <p style="font-size:0.84rem;margin:0">A mistake by an early-stage agent cascades through the pipeline, corrupting downstream agents' inputs. Robust swarms include validation checkpoints between agents and retry logic at each handoff boundary.</p>
+      </div>
+      <div class="card bl-rose">
+        <h4>💸 Cost Amplification</h4>
+        <p style="font-size:0.84rem;margin:0">N agents running in parallel multiply inference costs N-fold. Every coordination message is an additional LLM call. Swarms must carefully balance the quality benefit of additional agents against the raw economic cost of running them.</p>
+      </div>
+      <div class="card bl-rose">
+        <h4>🐛 Debugging Complexity</h4>
+        <p style="font-size:0.84rem;margin:0">Tracing a failure through a 10-agent pipeline — with non-deterministic model outputs at each step — is orders of magnitude harder than debugging a single agent. Comprehensive distributed tracing and execution visualization are non-negotiable in production.</p>
+      </div>
+      <div class="card bl-rose">
+        <h4>🔒 Trust &amp; Security</h4>
+        <p style="font-size:0.84rem;margin:0">Agents that blindly trust outputs from peer agents are vulnerable to prompt injection attacks and cascading hallucinations. Swarm harnesses need inter-agent validation layers and cannot assume that a message from "another agent" is automatically safe to act upon.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  SUMMARY                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <span class="anchor" id="summary"></span>
+    <div class="stag stag-violet">Summary</div>
+    <h2><span class="sec-num">4.</span>Summary &amp; Comparison</h2>
+    <p class="lead">Five complementary concepts, each operating at a different layer of AI autonomy — from the individual reasoning engine to self-organizing collective systems.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Concept</th><th>Scale</th><th>Core Function</th><th>Defining Challenge</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="pill pill-blue">AI Agent</span></td>
+            <td>Application layer</td>
+            <td>The goal-pursuing entity you build and reason about — it receives an objective, decides what steps to take, and calls tools to act. It is the <em>what</em>: the visible, intentional behavior of the system</td>
+            <td>Making correct multi-step decisions without compounding errors or losing track of the goal</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-green">Production Harness</span></td>
+            <td>Infrastructure layer</td>
+            <td>The invisible scaffolding that makes an agent possible — it supplies memory the model cannot retain on its own, executes tool calls the model cannot run itself, enforces permissions the model cannot police, and controls the loop the model cannot drive. It is the <em>how</em>: without it, the LLM is just a stateless text predictor</td>
+            <td>Balancing agent capability with safety constraints in live systems</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-blue">Evaluation Harness</span></td>
+            <td>Quality Gate</td>
+            <td>Benchmarks agent behavior in safe simulation; gates deployments on regression; scores trajectories not just answers</td>
+            <td>Testing non-deterministic systems with deterministic, reproducible rigor</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-cyan">Meta-Harness</span></td>
+            <td>Self-Optimization</td>
+            <td>Autonomously rewrites the runtime harness code based on evaluation data, without modifying the foundation model</td>
+            <td>Preventing runaway self-modification while maintaining stability</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-amber">Agent Swarm</span></td>
+            <td>Collective</td>
+            <td>Coordinates multiple specialized agents in parallel to solve problems beyond any single agent's capability or context window</td>
+            <td>Coordination overhead, error propagation, cost amplification, and trust between agents</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="hbox" style="margin-top:2rem">
+      <h4>The Convergence</h4>
+      <p>These paradigms are converging into a unified discipline. Production swarms need robust runtime harnesses for each constituent agent. Evaluation harnesses must now validate swarm-level behavior — not just individual agents — including emergent coordination patterns. Meta-Harness optimization extends to rewriting swarm communication protocols and task routing logic autonomously.</p>
+      <p style="margin-top:0.6rem">The frontier of AI systems engineering sits at this intersection: <strong>self-organizing, self-optimizing swarms of specialized agents</strong>, each wrapped in a production harness, collectively evaluated and improved by a meta-harness, operating reliably at scale in chaotic real-world environments — without human intervention in the loop.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  APPENDIX                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <span class="anchor" id="appendix"></span>
+    <div class="stag stag-violet">Appendix</div>
+    <h2><span class="sec-num">5.</span>Architecture Examples</h2>
+    <p class="lead">Eight visual walkthroughs of real-world AI system architectures — each diagram shows exactly how agents, harnesses, tools, and swarm patterns connect and interact in practice.</p>
+
+    <!-- ── A: Single Agent Runtime Stack ── -->
+    <div class="subsection">
+      <span class="anchor" id="app-single"></span>
+      <h3>A · Single Agent with Runtime Harness</h3>
+      <p>The foundational building block. A raw LLM is wrapped in a harness that supplies memory, executes tool calls on its behalf, enforces guardrails, and runs the iterative loop until an objective criterion is met.</p>
+      <div class="diag">
+        <div class="ad">
+          <!-- Input cap -->
+          <div class="ad-center" style="margin-bottom:0.55rem;">
+            <div class="ad-cap" style="background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.45);color:var(--text);">🎯 User Goal</div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- Harness boundary -->
+          <div style="border:1.5px solid rgba(99,102,241,.45);border-radius:14px;padding:1.25rem 1.1rem;position:relative;">
+            <div style="position:absolute;top:-0.65rem;left:1.1rem;background:var(--bg3);padding:0 0.55rem;font-size:0.64rem;font-weight:800;color:var(--accent2);letter-spacing:0.13em;text-transform:uppercase;">Runtime Harness Boundary</div>
+            <!-- Memory + Guardrails -->
+            <div class="ad-g2" style="margin-bottom:0.75rem;">
+              <div class="ad-node" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38);">
+                <div class="ad-lbl">Memory Layer</div>
+                <div class="ad-ttl" style="color:var(--cyan);">💾 Memory</div>
+                <div class="ad-desc">Short-term context · Long-term store · Compaction strategy</div>
+              </div>
+              <div class="ad-node" style="background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.38);">
+                <div class="ad-lbl">Safety Layer</div>
+                <div class="ad-ttl" style="color:var(--rose);">🔒 Guardrails</div>
+                <div class="ad-desc">Permission allowlist · Action blocking · Refusal recovery</div>
+              </div>
+            </div>
+            <!-- LLM ↔ Tool (3-col: model | arrows | tool) -->
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:0.75rem;">
+              <div class="ad-node-lg" style="background:rgba(99,102,241,.18);border:2px solid rgba(99,102,241,.5);">
+                <div class="ad-lbl">Core Reasoning Engine</div>
+                <div class="ad-ttl" style="color:var(--accent2);">🧠 LLM / Model</div>
+                <div class="ad-desc">Observe → Think → Decide</div>
+              </div>
+              <div style="text-align:center;padding:0 0.65rem;line-height:2;">
+                <div style="color:#fff;font-size:1.1rem;">→</div>
+                <div style="font-size:0.6rem;color:var(--dim);margin:-0.2rem 0;">request</div>
+                <div style="color:#fff;font-size:1.1rem;">←</div>
+                <div style="font-size:0.6rem;color:var(--dim);margin:-0.2rem 0;">results</div>
+              </div>
+              <div class="ad-node-lg" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.38);">
+                <div class="ad-lbl">Sandboxed Execution</div>
+                <div class="ad-ttl" style="color:var(--amber);">⚙️ Tool Layer</div>
+                <div class="ad-desc">Search · Code · API · Files</div>
+              </div>
+            </div>
+            <!-- Ralph Loop -->
+            <div style="background:rgba(244,63,94,.08);border:1px dashed rgba(244,63,94,.35);border-radius:8px;padding:0.45rem 0.85rem;text-align:center;">
+              <span style="font-size:0.8rem;color:var(--rose);">↺ </span>
+              <span style="font-size:0.8rem;color:var(--muted);">Harness intercepts completion → runs verifier → re-injects failures → loops until criteria met <strong style="color:var(--rose)">(Ralph Loop)</strong></span>
+            </div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- Output cap -->
+          <div class="ad-center">
+            <div class="ad-cap" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45);color:var(--green);">✓ Task Complete</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── B: Hierarchical Swarm ── -->
+    <div class="subsection">
+      <span class="anchor" id="app-hierarchical"></span>
+      <h3>B · Hierarchical Orchestrator-Worker Swarm</h3>
+      <p>The dominant production pattern (~⅔ of deployments). An orchestrator decomposes the top-level goal and delegates to specialist workers in parallel. Workers report back; the orchestrator synthesizes a final answer.</p>
+      <div class="diag">
+        <div class="ad">
+          <!-- Input cap -->
+          <div class="ad-center" style="margin-bottom:0.5rem;">
+            <div class="ad-cap" style="background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.45);color:var(--text);">🎯 Complex Goal</div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- Orchestrator -->
+          <div class="ad-node-lg" style="background:rgba(99,102,241,.18);border:2px solid rgba(99,102,241,.5);">
+            <div class="ad-lbl">Central Coordinator</div>
+            <div class="ad-ttl" style="color:var(--accent2);">🎯 Orchestrator Agent</div>
+            <div class="ad-desc">Decomposes · Delegates · Synthesizes</div>
+          </div>
+          <!-- Fan-out arrows — columns match ad-g4 below -->
+          <div class="ad-fa4">
+            <div>↓</div><div>↓</div><div>↓</div><div>↓</div>
+          </div>
+          <!-- 4 workers -->
+          <div class="ad-g4">
+            <div class="ad-node" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38);">
+              <div style="font-size:1.3rem;margin-bottom:0.2rem;">🔍</div>
+              <div class="ad-sm-title" style="color:var(--cyan);">Researcher</div>
+              <div class="ad-sm-desc">Gathers facts &amp; sources</div>
+            </div>
+            <div class="ad-node" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.4);">
+              <div style="font-size:1.3rem;margin-bottom:0.2rem;">💻</div>
+              <div class="ad-sm-title" style="color:var(--accent2);">Coder</div>
+              <div class="ad-sm-desc">Writes &amp; runs code</div>
+            </div>
+            <div class="ad-node" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.38);">
+              <div style="font-size:1.3rem;margin-bottom:0.2rem;">🧪</div>
+              <div class="ad-sm-title" style="color:var(--amber);">Tester</div>
+              <div class="ad-sm-desc">Validates outputs</div>
+            </div>
+            <div class="ad-node" style="background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.38);">
+              <div style="font-size:1.3rem;margin-bottom:0.2rem;">🔎</div>
+              <div class="ad-sm-title" style="color:var(--rose);">Reviewer</div>
+              <div class="ad-sm-desc">Checks quality</div>
+            </div>
+          </div>
+          <!-- Fan-in arrows — same column structure -->
+          <div class="ad-fa4">
+            <div>↓</div><div>↓</div><div>↓</div><div>↓</div>
+          </div>
+          <!-- Output cap -->
+          <div class="ad-center">
+            <div class="ad-cap" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45);color:var(--green);">✓ Synthesized Final Output</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── C: Sequential Pipeline ── -->
+    <div class="subsection">
+      <span class="anchor" id="app-sequential"></span>
+      <h3>C · Sequential Pipeline</h3>
+      <p>Agents are chained in strict order — each agent's output becomes the next agent's full input. Deterministic and easy to trace. Best when tasks have clear ordered dependencies (e.g. research → write → edit → publish).</p>
+      <div class="diag" style="overflow-x:auto;">
+        <!-- chain uses min-width:max-content so it scrolls rather than wraps -->
+        <div style="display:flex;align-items:stretch;min-width:max-content;margin:0 auto;">
+          <!-- Input cap -->
+          <div class="ad-node" style="background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.45);min-width:88px;">
+            <div class="ad-lbl">Input</div>
+            <div style="font-size:0.88rem;font-weight:700;color:var(--text);">📋 Brief</div>
+          </div>
+          <div class="ad-ha">→</div>
+          <!-- Agent 1 -->
+          <div class="ad-node" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38);min-width:110px;">
+            <div class="ad-lbl">Agent 1</div>
+            <div style="font-size:1.2rem;">🔍</div>
+            <div class="ad-sm-title" style="color:var(--cyan);">Research</div>
+            <div class="ad-sm-desc">Facts · Sources</div>
+          </div>
+          <div class="ad-ha">→</div>
+          <!-- Agent 2 -->
+          <div class="ad-node" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.4);min-width:110px;">
+            <div class="ad-lbl">Agent 2</div>
+            <div style="font-size:1.2rem;">✍️</div>
+            <div class="ad-sm-title" style="color:var(--accent2);">Writer</div>
+            <div class="ad-sm-desc">Draft content</div>
+          </div>
+          <div class="ad-ha">→</div>
+          <!-- Agent 3 -->
+          <div class="ad-node" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.38);min-width:110px;">
+            <div class="ad-lbl">Agent 3</div>
+            <div style="font-size:1.2rem;">📝</div>
+            <div class="ad-sm-title" style="color:var(--amber);">Editor</div>
+            <div class="ad-sm-desc">Style · Clarity</div>
+          </div>
+          <div class="ad-ha">→</div>
+          <!-- Agent 4 -->
+          <div class="ad-node" style="background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.38);min-width:110px;">
+            <div class="ad-lbl">Agent 4</div>
+            <div style="font-size:1.2rem;">🔍</div>
+            <div class="ad-sm-title" style="color:var(--violet);">SEO</div>
+            <div class="ad-sm-desc">Optimise discov.</div>
+          </div>
+          <div class="ad-ha">→</div>
+          <!-- Agent 5 -->
+          <div class="ad-node" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.38);min-width:110px;">
+            <div class="ad-lbl">Agent 5</div>
+            <div style="font-size:1.2rem;">📤</div>
+            <div class="ad-sm-title" style="color:var(--green);">Publisher</div>
+            <div class="ad-sm-desc">Format · Schedule</div>
+          </div>
+          <div class="ad-ha">→</div>
+          <!-- Output cap -->
+          <div class="ad-node" style="background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.45);min-width:88px;">
+            <div class="ad-lbl">Output</div>
+            <div style="font-size:0.88rem;font-weight:700;color:var(--green);">✓ Live</div>
+          </div>
+        </div>
+        <div style="margin-top:0.7rem;font-size:0.78rem;color:var(--muted);text-align:center;">Full context window carried through each handoff →</div>
+      </div>
+    </div>
+
+    <!-- ── D: Parallel Fan-out ── -->
+    <div class="subsection">
+      <span class="anchor" id="app-parallel"></span>
+      <h3>D · Parallel Fan-out &amp; Aggregation</h3>
+      <p>The orchestrator dispatches independent subtasks to N worker agents simultaneously. All agents run in parallel, dramatically reducing wall-clock time. Results are aggregated once all workers complete.</p>
+      <div class="diag">
+        <div class="ad">
+          <!-- Input cap -->
+          <div class="ad-center" style="margin-bottom:0.5rem;">
+            <div class="ad-cap" style="background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.45);color:var(--text);">🎯 Research Task</div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- Orchestrator -->
+          <div class="ad-node-lg" style="background:rgba(99,102,241,.18);border:2px solid rgba(99,102,241,.5);">
+            <div class="ad-ttl" style="color:var(--accent2);">🎯 Orchestrator</div>
+            <div class="ad-desc">Fans out 5 subtasks simultaneously</div>
+          </div>
+          <!-- Fan-out arrows — columns match ad-g5 below -->
+          <div class="ad-fa5">
+            <div>↓</div><div>↓</div><div>↓</div><div>↓</div><div>↓</div>
+          </div>
+          <!-- 5 parallel workers -->
+          <div class="ad-g5">
+            <div class="ad-node" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38);">
+              <div class="ad-sm-title" style="color:var(--cyan);">🔍 Domain A</div>
+              <div class="ad-sm-desc">Web search</div>
+            </div>
+            <div class="ad-node" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.4);">
+              <div class="ad-sm-title" style="color:var(--accent2);">📚 Domain B</div>
+              <div class="ad-sm-desc">DB query</div>
+            </div>
+            <div class="ad-node" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.38);">
+              <div class="ad-sm-title" style="color:var(--amber);">📊 Domain C</div>
+              <div class="ad-sm-desc">Data analysis</div>
+            </div>
+            <div class="ad-node" style="background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.38);">
+              <div class="ad-sm-title" style="color:var(--violet);">🧪 Domain D</div>
+              <div class="ad-sm-desc">Code test</div>
+            </div>
+            <div class="ad-node" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.38);">
+              <div class="ad-sm-title" style="color:var(--green);">📰 Domain E</div>
+              <div class="ad-sm-desc">News scrape</div>
+            </div>
+          </div>
+          <!-- Fan-in arrows — same column structure -->
+          <div class="ad-fa5">
+            <div>↓</div><div>↓</div><div>↓</div><div>↓</div><div>↓</div>
+          </div>
+          <!-- Aggregator -->
+          <div class="ad-node-lg" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38);">
+            <div class="ad-ttl" style="color:var(--cyan);">⚡ Aggregator Agent</div>
+            <div class="ad-desc">Waits for all N · Merges · De-duplicates</div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- Output cap -->
+          <div class="ad-center">
+            <div class="ad-cap" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45);color:var(--green);">✓ Unified Report</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── E: Iterative Refinement ── -->
+    <div class="subsection">
+      <span class="anchor" id="app-refinement"></span>
+      <h3>E · Iterative Refinement (Generator–Critic Loop)</h3>
+      <p>A generator agent produces an output. A critic agent scores it against a rubric. If the score is below the threshold the critique is fed back into the generator as a refinement prompt and the loop repeats until quality is met.</p>
+      <div class="diag">
+        <div class="ad">
+          <!-- Input cap -->
+          <div class="ad-center" style="margin-bottom:0.5rem;">
+            <div class="ad-cap" style="background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.45);color:var(--text);">📋 Task Input</div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- Generator + Critic side-by-side, equal height -->
+          <div class="ad-g2" style="align-items:stretch;">
+            <div class="ad-node-lg" style="background:rgba(99,102,241,.15);border:2px solid rgba(99,102,241,.45);">
+              <div class="ad-lbl">Produces Output</div>
+              <div class="ad-ttl" style="color:var(--accent2);">✍️ Generator Agent</div>
+              <div class="ad-desc">Creates draft answer</div>
+            </div>
+            <div class="ad-node-lg" style="background:rgba(245,158,11,.14);border:2px solid rgba(245,158,11,.38);">
+              <div class="ad-lbl">Evaluates Output</div>
+              <div class="ad-ttl" style="color:var(--amber);">⚖️ Critic Agent</div>
+              <div class="ad-desc">Scores against rubric</div>
+            </div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- Pass / Fail outcomes, equal width, equal height -->
+          <div class="ad-g2" style="align-items:stretch;">
+            <div class="ad-node" style="background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.38);">
+              <div class="ad-sm-title" style="color:var(--rose);">✗ Below threshold</div>
+              <div class="ad-sm-desc" style="margin-top:0.3rem;">Critique re-injected as refinement prompt</div>
+              <div style="font-size:0.72rem;color:var(--rose);margin-top:0.4rem;">↑ loop restarts at Generator</div>
+            </div>
+            <div class="ad-node" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.38);">
+              <div class="ad-sm-title" style="color:var(--green);">✓ Above threshold</div>
+              <div class="ad-sm-desc" style="margin-top:0.3rem;">Output accepted, pipeline continues</div>
+              <div style="font-size:0.72rem;color:var(--green);margin-top:0.4rem;">→ downstream agents</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── F: Eval + CI/CD Gate ── -->
+    <div class="subsection">
+      <span class="anchor" id="app-eval"></span>
+      <h3>F · Evaluation Harness + CI/CD Deployment Gate</h3>
+      <p>Every code push triggers a full trace-replay evaluation suite. The results are scored against threshold metrics. Only builds that pass every gate are allowed to deploy — failures are blocked automatically and developers are alerted.</p>
+      <div class="diag" style="overflow-x:auto;">
+        <div class="ad" style="max-width:700px;">
+          <!-- Pipeline: 5 nodes, equal flex, equal height -->
+          <div style="display:flex;align-items:stretch;min-width:max-content;margin-bottom:0.6rem;">
+            <div class="ad-node" style="background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.45);flex:1;min-width:100px;">
+              <div style="font-size:1.1rem;margin-bottom:0.2rem;">📦</div>
+              <div class="ad-sm-title" style="color:var(--accent2);">Code Push</div>
+              <div class="ad-sm-desc">PR merged to main</div>
+            </div>
+            <div class="ad-ha">→</div>
+            <div class="ad-node" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.38);flex:1;min-width:100px;">
+              <div style="font-size:1.1rem;margin-bottom:0.2rem;">⚡</div>
+              <div class="ad-sm-title" style="color:var(--amber);">Trigger Eval</div>
+              <div class="ad-sm-desc">CI pipeline fires</div>
+            </div>
+            <div class="ad-ha">→</div>
+            <div class="ad-node" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38);flex:1;min-width:100px;">
+              <div style="font-size:1.1rem;margin-bottom:0.2rem;">📼</div>
+              <div class="ad-sm-title" style="color:var(--cyan);">Trace Replay</div>
+              <div class="ad-sm-desc">1000s of recorded sessions</div>
+            </div>
+            <div class="ad-ha">→</div>
+            <div class="ad-node" style="background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.38);flex:1;min-width:100px;">
+              <div style="font-size:1.1rem;margin-bottom:0.2rem;">📊</div>
+              <div class="ad-sm-title" style="color:var(--violet);">Score vs Thresholds</div>
+              <div class="ad-sm-desc">Hallucin. · Accuracy · Latency</div>
+            </div>
+            <div class="ad-ha">→</div>
+            <div class="ad-node" style="background:rgba(99,102,241,.14);border:2px dashed rgba(99,102,241,.45);flex:1;min-width:100px;">
+              <div style="font-size:1.1rem;margin-bottom:0.2rem;">🚦</div>
+              <div class="ad-sm-title" style="color:var(--accent2);">Gate</div>
+              <div class="ad-sm-desc">All metrics pass?</div>
+            </div>
+          </div>
+          <!-- Outcomes: 2-col grid centered under pipeline -->
+          <div class="ad-va">↓</div>
+          <div class="ad-g2" style="align-items:stretch;">
+            <div class="ad-node" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45);">
+              <div class="ad-sm-title" style="color:var(--green);">✓ Deploy</div>
+              <div class="ad-sm-desc" style="margin-top:0.3rem;">All metrics above threshold → release proceeds</div>
+            </div>
+            <div class="ad-node" style="background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.38);">
+              <div class="ad-sm-title" style="color:var(--rose);">✗ Block + Alert</div>
+              <div class="ad-sm-desc" style="margin-top:0.3rem;">Regression detected → deploy halted, dev notified</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── G: Meta-Harness ── -->
+    <div class="subsection">
+      <span class="anchor" id="app-meta"></span>
+      <h3>G · Meta-Harness Self-Optimization Loop</h3>
+      <p>The evaluation harness feeds execution traces and failure logs to an evaluator agent. A proposer coding agent then autonomously rewrites the runtime harness code — improving memory compaction, tool formatting, and context management — without ever touching the foundation model.</p>
+      <div class="diag">
+        <div class="ad" style="max-width:640px;">
+          <!-- 2×2 grid: each pair of items shares a row, so heights match -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.55rem 0.75rem;">
+            <!-- Row 1 -->
+            <div class="ad-node-lg" style="background:rgba(16,185,129,.15);border:2px solid rgba(16,185,129,.38);">
+              <div class="ad-lbl">Production System</div>
+              <div class="ad-ttl" style="color:var(--green);">⚙️ Runtime Harness</div>
+              <div class="ad-desc">Executes live agent tasks · Generates execution traces</div>
+            </div>
+            <div class="ad-node-lg" style="background:rgba(99,102,241,.15);border:2px solid rgba(99,102,241,.45);">
+              <div class="ad-lbl">Meta-Harness Layer</div>
+              <div class="ad-ttl" style="color:var(--accent2);">🔬 Evaluator Agent</div>
+              <div class="ad-desc">Ingests traces · Identifies failures · Produces improvement spec</div>
+            </div>
+            <!-- Row 2: arrows, vertically centered in their cells -->
+            <div style="text-align:center;color:#fff;font-size:1.3rem;align-self:center;">↓</div>
+            <div style="text-align:center;color:#fff;font-size:1.3rem;align-self:center;">↓</div>
+            <!-- Row 3 -->
+            <div class="ad-node" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38);">
+              <div class="ad-lbl">Trace Store</div>
+              <div class="ad-sm-title" style="color:var(--cyan);">📼 Execution Traces</div>
+              <div class="ad-sm-desc" style="margin-top:0.25rem;">Tool calls · Failures · Timing · 10M+ tokens</div>
+            </div>
+            <div class="ad-node-lg" style="background:rgba(245,158,11,.14);border:2px solid rgba(245,158,11,.38);">
+              <div class="ad-lbl">Proposer</div>
+              <div class="ad-ttl" style="color:var(--amber);">💻 Coding Agent</div>
+              <div class="ad-desc">Rewrites harness code · Optimises memory, tool format &amp; context</div>
+            </div>
+          </div>
+          <!-- Full-width centered arrow + cycle bar -->
+          <div class="ad-va">↓</div>
+          <div style="background:rgba(16,185,129,.1);border:1px dashed rgba(16,185,129,.38);border-radius:8px;padding:0.5rem;text-align:center;">
+            <span style="font-size:0.8rem;color:var(--green);">↺ </span>
+            <span style="font-size:0.8rem;color:var(--muted);">New harness deployed to production → cycle repeats · Model weights never modified</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── H: Blackboard ── -->
+    <div class="subsection">
+      <span class="anchor" id="app-blackboard"></span>
+      <h3>H · Blackboard Shared-State Architecture</h3>
+      <p>A central shared state store (the "blackboard") holds the current problem and all intermediate results. Specialist agents monitor it, contribute when they can add value, and write results back — no direct agent-to-agent communication needed.</p>
+      <div class="diag">
+        <div class="ad">
+          <!-- Input cap -->
+          <div class="ad-center" style="margin-bottom:0.5rem;">
+            <div class="ad-cap" style="background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.45);color:var(--text);">🎯 Problem Input</div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- 3-col: [left agents] [⟷ blackboard ⟷] [right agents] -->
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:0.6rem;align-items:stretch;">
+            <!-- Left agents -->
+            <div style="display:flex;flex-direction:column;justify-content:space-around;gap:0.55rem;">
+              <div class="ad-node" style="background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.38);">
+                <div class="ad-sm-title" style="color:var(--cyan);">🔍 Researcher</div>
+                <div class="ad-sm-desc">Reads problem · Writes sources</div>
+              </div>
+              <div class="ad-node" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.4);">
+                <div class="ad-sm-title" style="color:var(--accent2);">💻 Coder</div>
+                <div class="ad-sm-desc">Reads sources · Writes code</div>
+              </div>
+            </div>
+            <!-- Center: bidirectional arrows + blackboard -->
+            <div style="display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:0 0.15rem;">
+              <div style="font-size:1rem;color:#fff;padding:0.4rem 0;">⟷</div>
+              <div class="ad-node-lg" style="background:rgba(167,139,250,.16);border:2px solid rgba(167,139,250,.45);min-width:148px;">
+                <div class="ad-lbl">Shared State</div>
+                <div class="ad-ttl" style="color:var(--violet);">📋 Blackboard</div>
+                <div style="margin-top:0.4rem;font-size:0.67rem;color:var(--muted);text-align:left;line-height:1.65;">
+                  · Problem definition<br>
+                  · Research findings<br>
+                  · Code drafts<br>
+                  · Test results<br>
+                  · Review notes
+                </div>
+              </div>
+              <div style="font-size:1rem;color:#fff;padding:0.4rem 0;">⟷</div>
+            </div>
+            <!-- Right agents -->
+            <div style="display:flex;flex-direction:column;justify-content:space-around;gap:0.55rem;">
+              <div class="ad-node" style="background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.38);">
+                <div class="ad-sm-title" style="color:var(--amber);">🧪 Tester</div>
+                <div class="ad-sm-desc">Reads code · Writes test results</div>
+              </div>
+              <div class="ad-node" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.38);">
+                <div class="ad-sm-title" style="color:var(--green);">📝 Reviewer</div>
+                <div class="ad-sm-desc">Reads all · Writes review</div>
+              </div>
+            </div>
+          </div>
+          <div class="ad-va">↓</div>
+          <!-- Output cap -->
+          <div class="ad-center">
+            <div class="ad-cap" style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45);color:var(--green);">✓ Final Answer (assembled from blackboard)</div>
+          </div>
+          <div style="margin-top:0.75rem;text-align:center;font-size:0.78rem;color:var(--muted);">All agents read from and write to the shared state · No direct agent-to-agent messages needed</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /section appendix -->
+
+</main>
+
+<script>
+  /* ── Nav toggle ───────────────────────────────────────────── */
+  function toggle(id) {
+    const el = document.getElementById(id);
+    const caret = document.getElementById(id + '-c');
+    if (!el) return;
+    const open = el.classList.toggle('open');
+    if (caret) caret.classList.toggle('open', open);
+  }
+
+  /* ── Nav click: prevent default, smooth-scroll ────────────── */
+  function navClick(e, id) {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ── Active nav on scroll ─────────────────────────────────── */
+  const sections = [
+    'intro','agent-what','agent-formula','agent-anatomy','agent-loop',
+    'harness-overview',
+    'rt-memory','rt-tools','rt-guardrails','rt-loops','rt-frameworks',
+    'ev-overview','ev-traces','ev-verifiers','ev-cicd','ev-tools',
+    'meta-harness',
+    'sw-what','sw-arch','sw-orchestration','sw-usecases','sw-frameworks','sw-challenges',
+    'summary'
+  ];
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const id = entry.target.id;
+      document.querySelectorAll('#nav a').forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`#nav a[href="#${id}"]`);
+      if (link) link.classList.add('active');
+    });
+  }, { rootMargin: '-8% 0px -82% 0px' });
+
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) io.observe(el);
+  });
+</script>
+</body>
+</html>
