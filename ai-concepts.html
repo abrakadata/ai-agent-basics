@@ -50,7 +50,7 @@
     /* ═══════════════════════════════════════════════════════════ */
     #nav {
       width: var(--nav-w);
-      min-height: 100vh;
+      height: 100vh;
       background: var(--bg2);
       border-right: 1px solid var(--border);
       position: fixed;
@@ -59,7 +59,17 @@
       z-index: 200;
       display: flex;
       flex-direction: column;
+      /* scrollbar hidden until hover */
+      scrollbar-width: none;
     }
+    #nav:hover {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    #nav::-webkit-scrollbar { width: 0; }
+    #nav:hover::-webkit-scrollbar { width: 4px; }
+    #nav:hover::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    #nav:hover::-webkit-scrollbar-track { background: transparent; }
 
     .nav-logo {
       padding: 1.25rem 1.1rem 1rem;
